@@ -1,0 +1,28 @@
+[project]
+name = "yt-dlp-types"
+version = "0.1.0"
+description = "Add your description here"
+readme = "README.md"
+authors = [
+    { name = "qwrwed", email = "qwrwed@users.noreply.github.com" }
+]
+requires-python = ">=3.13"
+dependencies = [
+    "mypy>=2.3.1",
+    "pydantic>=2.13.5",
+    "types-yt-dlp>=2026.8.19.20260912",
+    "yt-dlp==2026.8.19",
+]
+
+[project.scripts]
+yt-dlp-types = "yt_dlp_types:main"
+
+[build-system]
+requires = ["uv_build>=0.12.3,<0.13.0"]
+build-backend = "uv_build"
+
+[dependency-groups]
+dev = [
+    "ruff>=0.16.8",
+    "types-yt-dlp>=2026.8.19.20260912",
+]
