@@ -30,6 +30,10 @@ URLS = [
     "https://www.youtube.com/watch?v=M4gD1WSo5mA",
     "https://www.youtube.com/watch?v=MeJVWBSsPAY",
     "https://www.youtube.com/watch?v=OtqTfy26tG0",
+    "https://www.youtube.com/watch?v=YOelRv7fMxY",
+    "https://www.youtube.com/watch?v=_A9KsMbWh4E",
+    "https://www.youtube.com/watch?v=__2ABJjxzNo",
+    "https://www.youtube.com/watch?v=_b-2C3KPAM0",
 ]
 
 # genuine model failures, still need a fix
@@ -48,6 +52,9 @@ UNAVAILABLE_URLS = [
     "https://www.youtube.com/watch?v=DJztXj2GPfl",  # video unavailable, extract_info raises DownloadError
     "https://www.youtube.com/watch?v=HtVdAasjOgU",  # age-gated, needs cookies, extract_info raises DownloadError
     "https://www.youtube.com/watch?v=Ms7iBXnlUO8",  # video unavailable, extract_info raises DownloadError
+    "https://www.youtube.com/watch?v=Q39EVAstoRM",  # video unavailable, extract_info raises DownloadError
+    "https://www.youtube.com/watch?v=SZJvDhaSDnc",  # age-gated, needs cookies, extract_info raises DownloadError
+    "https://www.youtube.com/watch?v=Tq92D6wQ1mg",  # age-gated, needs cookies, extract_info raises DownloadError
 ]
 
 ydl_opts: yt_dlp._YoutubeDLOptions = {

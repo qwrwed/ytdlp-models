@@ -68,6 +68,10 @@ class ProgressiveFormat(BaseModel):
     format: str
 
 
+class StretchedProgressiveFormat(ProgressiveFormat):
+    stretched_ratio: float
+
+
 class _ManifestVideoBase(BaseModel):
     model_config = ConfigDict(extra='forbid')
 
@@ -100,6 +104,10 @@ class _ManifestVideoBase(BaseModel):
 
 class ManifestVideoFormat(_ManifestVideoBase):
     fps: float
+
+
+class StretchedManifestVideoFormat(ManifestVideoFormat):
+    stretched_ratio: float
 
 
 class ManifestVideoWithoutFpsFormat(_ManifestVideoBase):
@@ -205,7 +213,16 @@ class CaptionManifestTrack(BaseModel):
 
 AutomaticCaptions = dict[str, list[CaptionManifestTrack | CaptionTrack]]
 
-Subtitles = dict[str, list[CaptionManifestTrack | CaptionTrack]]
+class LiveChatReplayTrack(BaseModel):
+    model_config = ConfigDict(extra='forbid')
+
+    url: str
+    video_id: str
+    ext: Literal['json']
+    protocol: Literal['youtube_live_chat_replay']
+
+
+Subtitles = dict[str, list[CaptionManifestTrack | CaptionTrack | LiveChatReplayTrack]]
 
 
 class HeatmapItem(BaseModel):
@@ -229,7 +246,7 @@ class _VideoInfoBase(BaseModel):
 
     id: str
     title: str
-    formats: list[ProgressiveFormat | ManifestVideoFormat | ManifestVideoWithoutFpsFormat | ManifestVideoWithFormatNoteFormat | StoryboardFormat | ManifestAudioFormat | ManifestAudioWithLanguagePreferenceFormat]
+    formats: list[ProgressiveFormat | StretchedProgressiveFormat | ManifestVideoFormat | StretchedManifestVideoFormat | ManifestVideoWithoutFpsFormat | ManifestVideoWithFormatNoteFormat | StoryboardFormat | ManifestAudioFormat | ManifestAudioWithLanguagePreferenceFormat]
     thumbnails: list[Thumbnail | SizedThumbnail]
     thumbnail: str
     description: str
@@ -272,7 +289,7 @@ class _VideoInfoBase(BaseModel):
     requested_subtitles: None
     has_drm_: None = Field(..., alias='_has_drm')
     epoch: int
-    requested_formats: list[ProgressiveFormat | ManifestVideoWithFormatNoteFormat]
+    requested_formats: list[ProgressiveFormat | StretchedProgressiveFormat |ManifestVideoWithFormatNoteFormat]
     format: str
     format_id: str
     ext: str
@@ -288,7 +305,6 @@ class _VideoInfoBase(BaseModel):
     dynamic_range: str
     vcodec: str
     vbr: float
-    stretched_ratio: None
     aspect_ratio: float
     acodec: str
     abr: float
@@ -296,42 +312,77 @@ class _VideoInfoBase(BaseModel):
     audio_channels: int
 
 
-class VideoInfo(_VideoInfoBase):
+class _NotLive(BaseModel):
     live_status: Literal['not_live']
-    media_type: Literal['video', 'short']
-    release_timestamp: None
-    release_year: None
     was_live: Literal[False]
-    creators: None
-    uploader_id: str
-    uploader_url: str
 
 
-class LivestreamVideoInfo(_VideoInfoBase):
+class _WasLive(BaseModel):
     live_status: Literal['was_live']
-    media_type: Literal['livestream']
+    was_live: Literal[True]
+
+
+class _WithoutBroadcast(BaseModel):
+    release_timestamp: None
+
+
+# release_timestamp is the livestream/premiere start time
+class _WithBroadcast(BaseModel):
     release_timestamp: int
     release_date: str
     release_year: int
-    was_live: Literal[True]
+
+
+class _WithoutCreators(BaseModel):
     creators: None
+
+
+class _WithCreators(BaseModel):
+    creators: list[str]
+    creator: str
+
+
+class _Unstretched(BaseModel):
+    stretched_ratio: None
+
+
+# stretched_ratio comes from a yt:stretch=W:H tag on the video
+class _Stretched(BaseModel):
+    stretched_ratio: float
+
+
+class _WithUploader(BaseModel):
     uploader_id: str
     uploader_url: str
 
 
-class MusicVideoInfo(_VideoInfoBase):
-    live_status: Literal['not_live']
+class VideoInfo(_NotLive, _WithoutBroadcast, _WithoutCreators, _WithUploader, _Unstretched, _VideoInfoBase):
+    media_type: Literal['video', 'short']
+    release_year: None
+
+
+class LivestreamVideoInfo(_WasLive, _WithBroadcast, _WithoutCreators, _WithUploader, _Unstretched, _VideoInfoBase):
+    media_type: Literal['livestream']
+
+
+class PremiereCollabVideoInfo(_NotLive, _WithBroadcast, _WithCreators, _WithUploader, _Unstretched, _VideoInfoBase):
     media_type: Literal['video']
-    release_timestamp: None
+
+
+class StretchedVideoInfo(_NotLive, _WithoutBroadcast, _WithoutCreators, _WithUploader, _Stretched, _VideoInfoBase):
+    media_type: Literal['video']
+    release_year: None
+
+
+# creators/creator come from the music credits here, not collaborating channels
+class MusicVideoInfo(_NotLive, _WithoutBroadcast, _WithCreators, _Unstretched, _VideoInfoBase):
+    media_type: Literal['video']
     release_date: str
     release_year: int
-    was_live: Literal[False]
-    creators: list[str]
     uploader_id: None
     uploader_url: None
     album: str
     alt_title: str
     artist: str
     artists: list[str]
-    creator: str
     track: str
