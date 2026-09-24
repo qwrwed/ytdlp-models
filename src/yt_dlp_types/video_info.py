@@ -224,7 +224,7 @@ class ChapterItem(BaseModel):
     title: str
 
 
-class VideoInfo(BaseModel):
+class _VideoInfoBase(BaseModel):
     model_config = ConfigDict(extra='forbid')
 
     id: str
@@ -243,9 +243,6 @@ class VideoInfo(BaseModel):
     categories: list[str]
     tags: list[str]
     playable_in_embed: bool
-    live_status: str
-    media_type: str
-    release_timestamp: int | None
     format_sort_fields_: list[str] = Field(..., alias='_format_sort_fields')
     automatic_captions: AutomaticCaptions
     subtitles: Subtitles
@@ -255,11 +252,9 @@ class VideoInfo(BaseModel):
     like_count: int | None
     channel: str
     channel_follower_count: int | None
-    creators: None
     channel_is_verified: Literal[True] | None = None
+    license: Literal['Creative Commons Attribution license (reuse allowed)'] | None = None
     uploader: str
-    uploader_id: str
-    uploader_url: str
     upload_date: str
     timestamp: int
     availability: str
@@ -273,9 +268,7 @@ class VideoInfo(BaseModel):
     display_id: str
     fulltitle: str
     duration_string: str
-    release_year: int | None
     is_live: bool
-    was_live: bool
     requested_subtitles: None
     has_drm_: None = Field(..., alias='_has_drm')
     epoch: int
@@ -301,3 +294,44 @@ class VideoInfo(BaseModel):
     abr: float
     asr: int
     audio_channels: int
+
+
+class VideoInfo(_VideoInfoBase):
+    live_status: Literal['not_live']
+    media_type: Literal['video', 'short']
+    release_timestamp: None
+    release_year: None
+    was_live: Literal[False]
+    creators: None
+    uploader_id: str
+    uploader_url: str
+
+
+class LivestreamVideoInfo(_VideoInfoBase):
+    live_status: Literal['was_live']
+    media_type: Literal['livestream']
+    release_timestamp: int
+    release_date: str
+    release_year: int
+    was_live: Literal[True]
+    creators: None
+    uploader_id: str
+    uploader_url: str
+
+
+class MusicVideoInfo(_VideoInfoBase):
+    live_status: Literal['not_live']
+    media_type: Literal['video']
+    release_timestamp: None
+    release_date: str
+    release_year: int
+    was_live: Literal[False]
+    creators: list[str]
+    uploader_id: None
+    uploader_url: None
+    album: str
+    alt_title: str
+    artist: str
+    artists: list[str]
+    creator: str
+    track: str
