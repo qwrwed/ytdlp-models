@@ -351,6 +351,11 @@ class _Stretched(BaseModel):
     stretched_ratio: float
 
 
+# location is only present when the page shows a location pin
+class _WithLocation(BaseModel):
+    location: None
+
+
 class _WithUploader(BaseModel):
     uploader_id: str
     uploader_url: str
@@ -370,6 +375,13 @@ class PremiereCollabVideoInfo(_NotLive, _WithBroadcast, _WithCreators, _WithUplo
 
 
 class CollabVideoInfo(_NotLive, _WithoutBroadcast, _WithCreators, _WithUploader, _Unstretched, _VideoInfoBase):
+    media_type: Literal['video']
+    release_year: None
+
+
+class LocationVideoInfo(
+    _NotLive, _WithoutBroadcast, _WithoutCreators, _WithUploader, _Unstretched, _WithLocation, _VideoInfoBase
+):
     media_type: Literal['video']
     release_year: None
 
