@@ -9,6 +9,7 @@ from yt_dlp_types.video_info import (
     LocationVideoInfo,
     MusicVideoInfo,
     PremiereCollabVideoInfo,
+    PremiereVideoInfo,
     StretchedVideoInfo,
     VideoInfo,
 )
@@ -16,6 +17,7 @@ from yt_dlp_types.video_info import (
 ExtractResult: TypeAdapter[
     VideoInfo
     | LivestreamVideoInfo
+    | PremiereVideoInfo
     | PremiereCollabVideoInfo
     | CollabVideoInfo
     | LocationVideoInfo
@@ -25,6 +27,7 @@ ExtractResult: TypeAdapter[
 ] = TypeAdapter(
     VideoInfo
     | LivestreamVideoInfo
+    | PremiereVideoInfo
     | PremiereCollabVideoInfo
     | CollabVideoInfo
     | LocationVideoInfo

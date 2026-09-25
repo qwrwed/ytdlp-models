@@ -370,6 +370,10 @@ class LivestreamVideoInfo(_WasLive, _WithBroadcast, _WithoutCreators, _WithUploa
     media_type: Literal['livestream']
 
 
+class PremiereVideoInfo(_NotLive, _WithBroadcast, _WithoutCreators, _WithUploader, _Unstretched, _VideoInfoBase):
+    media_type: Literal['video']
+
+
 class PremiereCollabVideoInfo(_NotLive, _WithBroadcast, _WithCreators, _WithUploader, _Unstretched, _VideoInfoBase):
     media_type: Literal['video']
 
