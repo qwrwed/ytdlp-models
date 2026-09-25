@@ -84,7 +84,6 @@ class _ManifestVideoBase(BaseModel):
     protocol: str
     preference: None
     quality: int
-    has_drm: bool
     width: int
     height: int
     vcodec: str
@@ -102,8 +101,17 @@ class _ManifestVideoBase(BaseModel):
     format: str
 
 
-class ManifestVideoFormat(_ManifestVideoBase):
+class _ManifestVideoWithFpsBase(_ManifestVideoBase):
     fps: float
+
+
+class ManifestVideoFormat(_ManifestVideoWithFpsBase):
+    has_drm: bool
+
+
+# yt-dlp replaces a truthy has_drm on HLS formats with 'maybe'
+class MaybeDrmManifestVideoFormat(_ManifestVideoWithFpsBase):
+    has_drm: Literal['maybe']
 
 
 class StretchedManifestVideoFormat(ManifestVideoFormat):
@@ -111,7 +119,7 @@ class StretchedManifestVideoFormat(ManifestVideoFormat):
 
 
 class ManifestVideoWithoutFpsFormat(_ManifestVideoBase):
-    pass
+    has_drm: bool
 
 
 class ManifestVideoWithFormatNoteFormat(ManifestVideoFormat):
@@ -146,7 +154,7 @@ class StoryboardFormat(BaseModel):
     format: str
 
 
-class ManifestAudioFormat(BaseModel):
+class _ManifestAudioBase(BaseModel):
     model_config = ConfigDict(extra='forbid')
 
     format_id: str
@@ -159,7 +167,6 @@ class ManifestAudioFormat(BaseModel):
     protocol: str
     preference: None
     quality: int
-    has_drm: bool
     vcodec: str
     source_preference: int
     available_at: int
@@ -172,6 +179,14 @@ class ManifestAudioFormat(BaseModel):
     aspect_ratio: None
     http_headers: HttpHeaders
     format: str
+
+
+class ManifestAudioFormat(_ManifestAudioBase):
+    has_drm: bool
+
+
+class MaybeDrmManifestAudioFormat(_ManifestAudioBase):
+    has_drm: Literal['maybe']
 
 
 class ManifestAudioWithLanguagePreferenceFormat(ManifestAudioFormat):
@@ -246,7 +261,7 @@ class _VideoInfoBase(BaseModel):
 
     id: str
     title: str
-    formats: list[ProgressiveFormat | StretchedProgressiveFormat | ManifestVideoFormat | StretchedManifestVideoFormat | ManifestVideoWithoutFpsFormat | ManifestVideoWithFormatNoteFormat | StoryboardFormat | ManifestAudioFormat | ManifestAudioWithLanguagePreferenceFormat]
+    formats: list[ProgressiveFormat | StretchedProgressiveFormat | ManifestVideoFormat | StretchedManifestVideoFormat | MaybeDrmManifestVideoFormat | MaybeDrmManifestAudioFormat | ManifestVideoWithoutFpsFormat | ManifestVideoWithFormatNoteFormat | StoryboardFormat | ManifestAudioFormat | ManifestAudioWithLanguagePreferenceFormat]
     thumbnails: list[Thumbnail | SizedThumbnail]
     thumbnail: str
     description: str

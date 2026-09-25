@@ -40,6 +40,9 @@ URLS = [
     "https://www.youtube.com/watch?v=eQcmzGIKrzg",
     "https://www.youtube.com/watch?v=el3E4MbxRqQ",
     "https://www.youtube.com/watch?v=f6HNySwZV4c",
+    "https://www.youtube.com/watch?v=gHKT4uU8Zng",
+    "https://www.youtube.com/watch?v=gVfgbahppCY",
+    "https://www.youtube.com/watch?v=iqKdEhx-dD4",
 ]
 
 # genuine model failures, still need a fix
