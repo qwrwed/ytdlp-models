@@ -93,8 +93,6 @@ class _ManifestVideoBase(BaseModel):
     source_preference: int
     video_ext: str
     audio_ext: str
-    abr: int
-    vbr: float
     resolution: str
     aspect_ratio: float
     http_headers: HttpHeaders
@@ -105,20 +103,32 @@ class _ManifestVideoWithFpsBase(_ManifestVideoBase):
     fps: float
 
 
-class ManifestVideoFormat(_ManifestVideoWithFpsBase):
+class _VideoOnlyBitrates(BaseModel):
+    abr: int
+    vbr: float
+
+
+class ManifestVideoFormat(_ManifestVideoWithFpsBase, _VideoOnlyBitrates):
     has_drm: bool
 
 
 # yt-dlp replaces a truthy has_drm on HLS formats with 'maybe'
-class MaybeDrmManifestVideoFormat(_ManifestVideoWithFpsBase):
+class MaybeDrmManifestVideoFormat(_ManifestVideoWithFpsBase, _VideoOnlyBitrates):
     has_drm: Literal['maybe']
+
+
+# video and audio in one stream, so the total bitrate can't be split into abr/vbr
+class ManifestMuxedFormat(_ManifestVideoWithFpsBase):
+    has_drm: bool
+    abr: None
+    vbr: None
 
 
 class StretchedManifestVideoFormat(ManifestVideoFormat):
     stretched_ratio: float
 
 
-class ManifestVideoWithoutFpsFormat(_ManifestVideoBase):
+class ManifestVideoWithoutFpsFormat(_ManifestVideoBase, _VideoOnlyBitrates):
     has_drm: bool
 
 
@@ -261,7 +271,7 @@ class _VideoInfoBase(BaseModel):
 
     id: str
     title: str
-    formats: list[ProgressiveFormat | StretchedProgressiveFormat | ManifestVideoFormat | StretchedManifestVideoFormat | MaybeDrmManifestVideoFormat | MaybeDrmManifestAudioFormat | ManifestVideoWithoutFpsFormat | ManifestVideoWithFormatNoteFormat | StoryboardFormat | ManifestAudioFormat | ManifestAudioWithLanguagePreferenceFormat]
+    formats: list[ProgressiveFormat | StretchedProgressiveFormat | ManifestVideoFormat | StretchedManifestVideoFormat | MaybeDrmManifestVideoFormat | ManifestMuxedFormat | MaybeDrmManifestAudioFormat | ManifestVideoWithoutFpsFormat | ManifestVideoWithFormatNoteFormat | StoryboardFormat | ManifestAudioFormat | ManifestAudioWithLanguagePreferenceFormat]
     thumbnails: list[Thumbnail | SizedThumbnail]
     thumbnail: str
     description: str
