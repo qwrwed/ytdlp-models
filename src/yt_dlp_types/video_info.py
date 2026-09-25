@@ -369,6 +369,11 @@ class PremiereCollabVideoInfo(_NotLive, _WithBroadcast, _WithCreators, _WithUplo
     media_type: Literal['video']
 
 
+class CollabVideoInfo(_NotLive, _WithoutBroadcast, _WithCreators, _WithUploader, _Unstretched, _VideoInfoBase):
+    media_type: Literal['video']
+    release_year: None
+
+
 class StretchedVideoInfo(_NotLive, _WithoutBroadcast, _WithoutCreators, _WithUploader, _Stretched, _VideoInfoBase):
     media_type: Literal['video']
     release_year: None
