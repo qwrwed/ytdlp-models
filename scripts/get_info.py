@@ -78,15 +78,19 @@ UNAVAILABLE_URLS = [
 ydl_opts: yt_dlp._YoutubeDLOptions = {
     "extract_flat": True,
 }
-with yt_dlp.YoutubeDL(ydl_opts) as ydl:
-    for url in URLS[-1:]:
-        info_dict = ydl.extract_info(url, download=False)
+# without extract_flat, redirects are followed to the target video instead of returning a url stub
+no_flat_opts: yt_dlp._YoutubeDLOptions = {**ydl_opts, "extract_flat": False}
 
-        try:
-            info_model = ExtractResult.validate_python(info_dict)
-            print(f"OK: {url}")
-        except Exception as e:
-            print(f"FAILED: {url}\n{e}")
+for opts, out_path in ((ydl_opts, "out.json"), (no_flat_opts, "out_no_flat.json")):
+    with yt_dlp.YoutubeDL(opts) as ydl:
+        for url in URLS[-1:]:
+            info_dict = ydl.extract_info(url, download=False)
 
-        info_json = json.dumps(ydl.sanitize_info(info_dict), indent=4)
-        Path("out.json").write_text(info_json)
+            try:
+                info_model = ExtractResult.validate_python(info_dict)
+                print(f"OK (extract_flat={opts['extract_flat']}): {url}")
+            except Exception as e:
+                print(f"FAILED (extract_flat={opts['extract_flat']}): {url}\n{e}")
+
+            info_json = json.dumps(ydl.sanitize_info(info_dict), indent=4)
+            Path(out_path).write_text(info_json)

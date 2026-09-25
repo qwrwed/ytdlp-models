@@ -381,52 +381,61 @@ class _WithLocation(BaseModel):
     location: None
 
 
-class _WithUploader(BaseModel):
+# uploader_id/uploader_url are the channel's @handle
+class _WithHandle(BaseModel):
     uploader_id: str
     uploader_url: str
 
 
-class VideoInfo(_NotLive, _WithoutBroadcast, _WithoutCreators, _WithUploader, _Unstretched, _VideoInfoBase):
+class _WithoutHandle(BaseModel):
+    uploader_id: None
+    uploader_url: None
+
+
+class VideoInfo(_NotLive, _WithoutBroadcast, _WithoutCreators, _WithHandle, _Unstretched, _VideoInfoBase):
     media_type: Literal['video', 'short']
     release_year: None
 
 
-class LivestreamVideoInfo(_WasLive, _WithBroadcast, _WithoutCreators, _WithUploader, _Unstretched, _VideoInfoBase):
+class LivestreamVideoInfo(_WasLive, _WithBroadcast, _WithoutCreators, _WithHandle, _Unstretched, _VideoInfoBase):
     media_type: Literal['livestream']
 
 
-class PremiereVideoInfo(_NotLive, _WithBroadcast, _WithoutCreators, _WithUploader, _Unstretched, _VideoInfoBase):
+class PremiereVideoInfo(_NotLive, _WithBroadcast, _WithoutCreators, _WithHandle, _Unstretched, _VideoInfoBase):
     media_type: Literal['video']
 
 
-class PremiereCollabVideoInfo(_NotLive, _WithBroadcast, _WithCreators, _WithUploader, _Unstretched, _VideoInfoBase):
+class PremiereCollabVideoInfo(_NotLive, _WithBroadcast, _WithCreators, _WithHandle, _Unstretched, _VideoInfoBase):
     media_type: Literal['video']
 
 
-class CollabVideoInfo(_NotLive, _WithoutBroadcast, _WithCreators, _WithUploader, _Unstretched, _VideoInfoBase):
+class CollabVideoInfo(_NotLive, _WithoutBroadcast, _WithCreators, _WithHandle, _Unstretched, _VideoInfoBase):
     media_type: Literal['video']
     release_year: None
 
 
 class LocationVideoInfo(
-    _NotLive, _WithoutBroadcast, _WithoutCreators, _WithUploader, _Unstretched, _WithLocation, _VideoInfoBase
+    _NotLive, _WithoutBroadcast, _WithoutCreators, _WithHandle, _Unstretched, _WithLocation, _VideoInfoBase
 ):
     media_type: Literal['video']
     release_year: None
 
 
-class StretchedVideoInfo(_NotLive, _WithoutBroadcast, _WithoutCreators, _WithUploader, _Stretched, _VideoInfoBase):
+class StretchedVideoInfo(_NotLive, _WithoutBroadcast, _WithoutCreators, _WithHandle, _Stretched, _VideoInfoBase):
+    media_type: Literal['video']
+    release_year: None
+
+
+class NoHandleVideoInfo(_NotLive, _WithoutBroadcast, _WithoutCreators, _WithoutHandle, _Unstretched, _VideoInfoBase):
     media_type: Literal['video']
     release_year: None
 
 
 # creators/creator come from the music credits here, not collaborating channels
-class MusicVideoInfo(_NotLive, _WithoutBroadcast, _WithCreators, _Unstretched, _VideoInfoBase):
+class MusicVideoInfo(_NotLive, _WithoutBroadcast, _WithCreators, _WithoutHandle, _Unstretched, _VideoInfoBase):
     media_type: Literal['video']
     release_date: str
     release_year: int
-    uploader_id: None
-    uploader_url: None
     album: str
     alt_title: str
     artist: str
