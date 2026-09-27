@@ -5,11 +5,10 @@ from typing import Literal
 from pydantic import BaseModel, ConfigDict, Field
 
 
-class UrlReference(BaseModel):
+class _UrlReferenceBase(BaseModel):
     model_config = ConfigDict(extra='forbid')
 
-    ie_key: str
-    id: str
+    ie_key: Literal['Youtube', 'YoutubeTab']
     type_: Literal['url'] = Field(..., alias='_type')
     url: str
     webpage_url: str
@@ -18,3 +17,15 @@ class UrlReference(BaseModel):
     webpage_url_domain: str
     extractor: str
     extractor_key: str
+
+
+class UrlReference(_UrlReferenceBase):
+    id: str
+
+
+class TitledUrlReference(UrlReference):
+    title: str
+
+
+class UrlReferenceWithoutId(_UrlReferenceBase):
+    pass
