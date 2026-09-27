@@ -6,7 +6,17 @@ from typing import Literal
 
 from pydantic import BaseModel, ConfigDict, Field
 
-from yt_dlp_types.video_info import SizedThumbnail, Thumbnail
+from yt_dlp_types.video_info import (
+    CollabVideoInfoInPlaylist,
+    LiveNowVideoInfoInPlaylist,
+    LivestreamVideoInfoInPlaylist,
+    LocationVideoInfoInPlaylist,
+    MusicVideoInfoInPlaylist,
+    PremiereVideoInfoInPlaylist,
+    SizedThumbnail,
+    Thumbnail,
+    VideoInfoInPlaylist,
+)
 
 
 class SizedThumbnailWithoutPreference(BaseModel):
@@ -236,6 +246,7 @@ class TruncatedTabPlaylistEntry(_Nested, _VerifiedOwnerMetadata, _Truncated, _Pl
     playlist_count: None
 
 
+# url stubs with extract_flat on, full video infos with it off
 type PlaylistEntry = (
     LinkEntry
     | MinimalVideoEntry
@@ -247,6 +258,18 @@ type PlaylistEntry = (
     | LockupEntryWithOwnerName
     | VideoRendererEntry
     | LiveVideoRendererEntry
+    | VideoInfoInPlaylist
+    | LivestreamVideoInfoInPlaylist
+    | LiveNowVideoInfoInPlaylist
+    | PremiereVideoInfoInPlaylist
+    | CollabVideoInfoInPlaylist
+    | LocationVideoInfoInPlaylist
+    | MusicVideoInfoInPlaylist
     | TabPlaylistEntry
     | TruncatedTabPlaylistEntry
+    | PlaylistInfo
+    | TruncatedPlaylistInfo
+    | VerifiedPlaylistInfo
+    | TruncatedVerifiedPlaylistInfo
+    | TruncatedBarePlaylistInfo
 )

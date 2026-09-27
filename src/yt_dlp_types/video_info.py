@@ -72,7 +72,7 @@ class StretchedProgressiveFormat(ProgressiveFormat):
     stretched_ratio: float
 
 
-class _ManifestVideoBase(BaseModel):
+class _ManifestVideoCore(BaseModel):
     model_config = ConfigDict(extra='forbid')
 
     format_id: str
@@ -89,7 +89,6 @@ class _ManifestVideoBase(BaseModel):
     vcodec: str
     acodec: str
     dynamic_range: str
-    available_at: int
     source_preference: int
     video_ext: str
     audio_ext: str
@@ -97,6 +96,10 @@ class _ManifestVideoBase(BaseModel):
     aspect_ratio: float
     http_headers: HttpHeaders
     format: str
+
+
+class _ManifestVideoBase(_ManifestVideoCore):
+    available_at: int
 
 
 class _ManifestVideoWithFpsBase(_ManifestVideoBase):
@@ -109,6 +112,16 @@ class _VideoOnlyBitrates(BaseModel):
 
 
 class ManifestVideoFormat(_ManifestVideoWithFpsBase, _VideoOnlyBitrates):
+    has_drm: bool
+
+
+# yt-dlp flags HLS formats of videos uploaded in the last 2 days for testing
+class NeedsTestingManifestVideoFormat(ManifestVideoFormat):
+    needs_testing__: Literal[True] = Field(..., alias='__needs_testing')
+
+
+class LiveManifestVideoFormat(_ManifestVideoCore, _VideoOnlyBitrates):
+    fps: float
     has_drm: bool
 
 
@@ -164,7 +177,7 @@ class StoryboardFormat(BaseModel):
     format: str
 
 
-class _ManifestAudioBase(BaseModel):
+class _ManifestAudioCore(BaseModel):
     model_config = ConfigDict(extra='forbid')
 
     format_id: str
@@ -179,7 +192,6 @@ class _ManifestAudioBase(BaseModel):
     quality: int
     vcodec: str
     source_preference: int
-    available_at: int
     audio_ext: str
     video_ext: str
     vbr: int
@@ -191,8 +203,16 @@ class _ManifestAudioBase(BaseModel):
     format: str
 
 
+class _ManifestAudioBase(_ManifestAudioCore):
+    available_at: int
+
+
 class ManifestAudioFormat(_ManifestAudioBase):
     has_drm: bool
+
+
+class NeedsTestingManifestAudioFormat(ManifestAudioFormat):
+    needs_testing__: Literal[True] = Field(..., alias='__needs_testing')
 
 
 class MaybeDrmManifestAudioFormat(_ManifestAudioBase):
@@ -201,6 +221,14 @@ class MaybeDrmManifestAudioFormat(_ManifestAudioBase):
 
 class ManifestAudioWithLanguagePreferenceFormat(ManifestAudioFormat):
     language_preference: int
+
+
+class NeedsTestingManifestAudioWithLanguagePreferenceFormat(ManifestAudioWithLanguagePreferenceFormat):
+    needs_testing__: Literal[True] = Field(..., alias='__needs_testing')
+
+
+class LiveManifestAudioFormat(_ManifestAudioCore):
+    has_drm: bool
 
 
 class Thumbnail(BaseModel):
@@ -247,7 +275,16 @@ class LiveChatReplayTrack(BaseModel):
     protocol: Literal['youtube_live_chat_replay']
 
 
-Subtitles = dict[str, list[CaptionManifestTrack | CaptionTrack | LiveChatReplayTrack]]
+class LiveChatTrack(BaseModel):
+    model_config = ConfigDict(extra='forbid')
+
+    url: str
+    video_id: str
+    ext: Literal['json']
+    protocol: Literal['youtube_live_chat']
+
+
+Subtitles = dict[str, list[CaptionManifestTrack | CaptionTrack | LiveChatReplayTrack | LiveChatTrack]]
 
 
 class HeatmapItem(BaseModel):
@@ -271,13 +308,11 @@ class _VideoInfoBase(BaseModel):
 
     id: str
     title: str
-    formats: list[ProgressiveFormat | StretchedProgressiveFormat | ManifestVideoFormat | StretchedManifestVideoFormat | MaybeDrmManifestVideoFormat | ManifestMuxedFormat | MaybeDrmManifestAudioFormat | ManifestVideoWithoutFpsFormat | ManifestVideoWithFormatNoteFormat | StoryboardFormat | ManifestAudioFormat | ManifestAudioWithLanguagePreferenceFormat]
     thumbnails: list[Thumbnail | SizedThumbnail]
     thumbnail: str
     description: str
     channel_id: str
     channel_url: str
-    duration: int
     view_count: int
     average_rating: None
     age_limit: int
@@ -305,36 +340,90 @@ class _VideoInfoBase(BaseModel):
     webpage_url_domain: str
     extractor: str
     extractor_key: str
-    playlist: None
-    playlist_index: None
     display_id: str
     fulltitle: str
-    duration_string: str
     is_live: bool
     requested_subtitles: None
     has_drm_: None = Field(..., alias='_has_drm')
     epoch: int
-    requested_formats: list[ProgressiveFormat | StretchedProgressiveFormat |ManifestVideoWithFormatNoteFormat]
     format: str
     format_id: str
     ext: str
     protocol: str
     language: str | None
     format_note: str
-    filesize_approx: int
     tbr: float
     width: int
     height: int
     resolution: str
-    fps: int
     dynamic_range: str
     vcodec: str
     vbr: float
     aspect_ratio: float
+
+
+class _OnDemand(BaseModel):
+    formats: list[
+        ProgressiveFormat
+        | StretchedProgressiveFormat
+        | ManifestVideoFormat
+        | NeedsTestingManifestVideoFormat
+        | StretchedManifestVideoFormat
+        | MaybeDrmManifestVideoFormat
+        | ManifestMuxedFormat
+        | ManifestVideoWithoutFpsFormat
+        | ManifestVideoWithFormatNoteFormat
+        | StoryboardFormat
+        | ManifestAudioFormat
+        | NeedsTestingManifestAudioFormat
+        | MaybeDrmManifestAudioFormat
+        | ManifestAudioWithLanguagePreferenceFormat
+        | NeedsTestingManifestAudioWithLanguagePreferenceFormat
+    ]
+    requested_formats: list[ProgressiveFormat | StretchedProgressiveFormat | ManifestVideoWithFormatNoteFormat]
+    duration: int
+    duration_string: str
+    filesize_approx: int
+    fps: int
     acodec: str
     abr: float
     asr: int
     audio_channels: int
+
+
+# still broadcasting, so there's no duration and only live HLS formats
+class _LiveNow(BaseModel):
+    formats: list[LiveManifestVideoFormat | LiveManifestAudioFormat]
+    requested_formats: list[LiveManifestVideoFormat | LiveManifestAudioFormat]
+    filesize_approx: None
+    fps: float
+    acodec: None
+    abr: None
+    asr: None
+    audio_channels: None
+    concurrent_view_count: int
+
+
+class _Standalone(BaseModel):
+    playlist: None
+    playlist_index: None
+
+
+# yt-dlp adds these when the video was extracted as a playlist entry
+class _InPlaylist(BaseModel):
+    last_playlist_index__: int = Field(..., alias='__last_playlist_index')
+    n_entries: int
+    playlist: str
+    playlist_autonumber: int
+    playlist_channel: str | None
+    playlist_channel_id: str | None
+    playlist_count: int | None
+    playlist_id: str
+    playlist_index: int
+    playlist_title: str
+    playlist_uploader: str | None
+    playlist_uploader_id: str | None
+    playlist_webpage_url: str
 
 
 class _NotLive(BaseModel):
@@ -345,6 +434,11 @@ class _NotLive(BaseModel):
 class _WasLive(BaseModel):
     live_status: Literal['was_live']
     was_live: Literal[True]
+
+
+class _IsLive(BaseModel):
+    live_status: Literal['is_live']
+    was_live: Literal[False]
 
 
 class _WithoutBroadcast(BaseModel):
@@ -378,7 +472,7 @@ class _Stretched(BaseModel):
 
 # location is only present when the page shows a location pin
 class _WithLocation(BaseModel):
-    location: None
+    location: str | None
 
 
 # uploader_id/uploader_url are the channel's @handle
@@ -392,47 +486,54 @@ class _WithoutHandle(BaseModel):
     uploader_url: None
 
 
-class VideoInfo(_NotLive, _WithoutBroadcast, _WithoutCreators, _WithHandle, _Unstretched, _VideoInfoBase):
+# each _*Shape below is one video variant; the public classes pair it with _Standalone or _InPlaylist
+
+
+class _VideoShape(_NotLive, _WithoutBroadcast, _WithoutCreators, _WithHandle, _Unstretched, _OnDemand, _VideoInfoBase):
     media_type: Literal['video', 'short']
     release_year: None
 
 
-class LivestreamVideoInfo(_WasLive, _WithBroadcast, _WithoutCreators, _WithHandle, _Unstretched, _VideoInfoBase):
+class _LivestreamShape(_WasLive, _WithBroadcast, _WithoutCreators, _WithHandle, _Unstretched, _OnDemand, _VideoInfoBase):
     media_type: Literal['livestream']
 
 
-class PremiereVideoInfo(_NotLive, _WithBroadcast, _WithoutCreators, _WithHandle, _Unstretched, _VideoInfoBase):
+class _LiveNowShape(_IsLive, _WithBroadcast, _WithoutCreators, _WithHandle, _Unstretched, _LiveNow, _VideoInfoBase):
+    media_type: Literal['livestream']
+
+
+class _PremiereShape(_NotLive, _WithBroadcast, _WithoutCreators, _WithHandle, _Unstretched, _OnDemand, _VideoInfoBase):
     media_type: Literal['video']
 
 
-class PremiereCollabVideoInfo(_NotLive, _WithBroadcast, _WithCreators, _WithHandle, _Unstretched, _VideoInfoBase):
+class _PremiereCollabShape(_NotLive, _WithBroadcast, _WithCreators, _WithHandle, _Unstretched, _OnDemand, _VideoInfoBase):
     media_type: Literal['video']
 
 
-class CollabVideoInfo(_NotLive, _WithoutBroadcast, _WithCreators, _WithHandle, _Unstretched, _VideoInfoBase):
-    media_type: Literal['video']
+class _CollabShape(_NotLive, _WithoutBroadcast, _WithCreators, _WithHandle, _Unstretched, _OnDemand, _VideoInfoBase):
+    media_type: Literal['video', 'short']
     release_year: None
 
 
-class LocationVideoInfo(
-    _NotLive, _WithoutBroadcast, _WithoutCreators, _WithHandle, _Unstretched, _WithLocation, _VideoInfoBase
+class _LocationShape(
+    _NotLive, _WithoutBroadcast, _WithoutCreators, _WithHandle, _Unstretched, _WithLocation, _OnDemand, _VideoInfoBase
 ):
+    media_type: Literal['video', 'short']
+    release_year: None
+
+
+class _StretchedShape(_NotLive, _WithoutBroadcast, _WithoutCreators, _WithHandle, _Stretched, _OnDemand, _VideoInfoBase):
     media_type: Literal['video']
     release_year: None
 
 
-class StretchedVideoInfo(_NotLive, _WithoutBroadcast, _WithoutCreators, _WithHandle, _Stretched, _VideoInfoBase):
-    media_type: Literal['video']
-    release_year: None
-
-
-class NoHandleVideoInfo(_NotLive, _WithoutBroadcast, _WithoutCreators, _WithoutHandle, _Unstretched, _VideoInfoBase):
+class _NoHandleShape(_NotLive, _WithoutBroadcast, _WithoutCreators, _WithoutHandle, _Unstretched, _OnDemand, _VideoInfoBase):
     media_type: Literal['video']
     release_year: None
 
 
 # creators/creator come from the music credits here, not collaborating channels
-class MusicVideoInfo(_NotLive, _WithoutBroadcast, _WithCreators, _WithoutHandle, _Unstretched, _VideoInfoBase):
+class _MusicShape(_NotLive, _WithoutBroadcast, _WithCreators, _WithoutHandle, _Unstretched, _OnDemand, _VideoInfoBase):
     media_type: Literal['video']
     release_date: str
     release_year: int
@@ -441,3 +542,71 @@ class MusicVideoInfo(_NotLive, _WithoutBroadcast, _WithCreators, _WithoutHandle,
     artist: str
     artists: list[str]
     track: str
+
+
+class VideoInfo(_Standalone, _VideoShape):
+    pass
+
+
+class LivestreamVideoInfo(_Standalone, _LivestreamShape):
+    pass
+
+
+class LiveNowVideoInfo(_Standalone, _LiveNowShape):
+    pass
+
+
+class PremiereVideoInfo(_Standalone, _PremiereShape):
+    pass
+
+
+class PremiereCollabVideoInfo(_Standalone, _PremiereCollabShape):
+    pass
+
+
+class CollabVideoInfo(_Standalone, _CollabShape):
+    pass
+
+
+class LocationVideoInfo(_Standalone, _LocationShape):
+    pass
+
+
+class StretchedVideoInfo(_Standalone, _StretchedShape):
+    pass
+
+
+class NoHandleVideoInfo(_Standalone, _NoHandleShape):
+    pass
+
+
+class MusicVideoInfo(_Standalone, _MusicShape):
+    pass
+
+
+class VideoInfoInPlaylist(_InPlaylist, _VideoShape):
+    pass
+
+
+class LivestreamVideoInfoInPlaylist(_InPlaylist, _LivestreamShape):
+    pass
+
+
+class LiveNowVideoInfoInPlaylist(_InPlaylist, _LiveNowShape):
+    pass
+
+
+class PremiereVideoInfoInPlaylist(_InPlaylist, _PremiereShape):
+    pass
+
+
+class CollabVideoInfoInPlaylist(_InPlaylist, _CollabShape):
+    pass
+
+
+class LocationVideoInfoInPlaylist(_InPlaylist, _LocationShape):
+    pass
+
+
+class MusicVideoInfoInPlaylist(_InPlaylist, _MusicShape):
+    pass

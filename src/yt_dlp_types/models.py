@@ -12,6 +12,7 @@ from yt_dlp_types.playlist_info import (
 from yt_dlp_types.url_reference import TitledUrlReference, UrlReference, UrlReferenceWithoutId
 from yt_dlp_types.video_info import (
     CollabVideoInfo,
+    LiveNowVideoInfo,
     LivestreamVideoInfo,
     LocationVideoInfo,
     MusicVideoInfo,
@@ -25,6 +26,7 @@ from yt_dlp_types.video_info import (
 type ExtractResultType = (
     VideoInfo
     | LivestreamVideoInfo
+    | LiveNowVideoInfo
     | PremiereVideoInfo
     | PremiereCollabVideoInfo
     | CollabVideoInfo
