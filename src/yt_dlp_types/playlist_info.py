@@ -76,6 +76,13 @@ class UntitledShortsEntry(_ShortsEntryBase):
     pass
 
 
+class ShortsEntryWithoutViewCount(_EntryBase):
+    id: str
+    ie_key: Literal['Youtube']
+    thumbnails: list[EntryThumbnail]
+    title: str
+
+
 # built by yt-dlp's _extract_lockup_view_model
 class _LockupEntryBase(_EntryBase):
     id: str
@@ -85,18 +92,60 @@ class _LockupEntryBase(_EntryBase):
     view_count: int | None
     timestamp: None
     availability: Literal['subscriber_only'] | None
-    creators: None
+    # list of channels for videos credited to several collaborators
+    creators: list[str] | None
 
 
 class LockupEntry(_LockupEntryBase):
     ie_key: Literal['Youtube', 'YoutubeTab']
-    live_status: Literal['is_upcoming'] | None
+    live_status: Literal['is_upcoming', 'was_live'] | None
     channel: str
     channel_id: str
     channel_url: str
     uploader: str
     uploader_id: str
     uploader_url: str
+
+
+# owner channel has no @handle
+class LockupEntryWithoutHandle(_LockupEntryBase):
+    ie_key: Literal['Youtube']
+    live_status: None
+    channel: str
+    channel_id: str
+    channel_url: str
+    uploader: str
+    uploader_url: None
+
+
+# owner named only through the collaborator list, so no channel id or handle
+class LockupEntryWithCollaborators(_LockupEntryBase):
+    ie_key: Literal['Youtube']
+    live_status: None
+    duration: int
+    view_count: int
+    availability: None
+    creators: list[str]
+    channel: str
+    channel_url: None
+    uploader: str
+    uploader_url: None
+
+
+# no title, duration or view count is shown for these
+class UntitledLockupEntry(_EntryBase):
+    id: str
+    ie_key: Literal['Youtube']
+    title: None
+    thumbnails: list[EntryThumbnail]
+    duration: None
+    view_count: None
+    timestamp: None
+    availability: None
+    creators: None
+    live_status: None
+    channel_url: None
+    uploader_url: None
 
 
 # listed on the owning channel's own tab, so no owner fields are filled in
@@ -142,6 +191,28 @@ class VideoRendererEntry(_VideoRendererEntryBase):
     view_count: int | None
     channel_id: str | None
     channel_url: str | None
+
+
+# placeholder yt-dlp keeps for a private or deleted video in a playlist
+class UnavailableVideoRendererEntry(_EntryBase):
+    id: str
+    ie_key: Literal['Youtube']
+    title: Literal['[Private video]', '[Deleted video]']
+    thumbnails: list[EntryThumbnail]
+    description: None
+    duration: None
+    view_count: None
+    timestamp: None
+    release_timestamp: None
+    availability: None
+    live_status: None
+    channel: None
+    channel_id: None
+    channel_url: None
+    channel_is_verified: None
+    uploader: None
+    uploader_id: None
+    uploader_url: None
 
 
 # live entries report concurrent_view_count in place of view_count
@@ -230,10 +301,14 @@ class VerifiedPlaylistInfo(_TopLevel, _VerifiedOwnerMetadata, _PlaylistCore):
 
 
 class TruncatedVerifiedPlaylistInfo(_TopLevel, _VerifiedOwnerMetadata, _Truncated, _PlaylistCore):
-    playlist_count: None
+    playlist_count: int | None
 
 
 # no owner metadata at all
+class BarePlaylistInfo(_TopLevel, _PlaylistCore):
+    playlist_count: int
+
+
 class TruncatedBarePlaylistInfo(_TopLevel, _Truncated, _PlaylistCore):
     playlist_count: None
 
@@ -253,10 +328,15 @@ type PlaylistEntry = (
     | MinimalPlaylistEntry
     | ShortsEntry
     | UntitledShortsEntry
+    | ShortsEntryWithoutViewCount
     | LockupEntry
+    | LockupEntryWithoutHandle
+    | LockupEntryWithCollaborators
     | LockupEntryWithoutOwner
     | LockupEntryWithOwnerName
+    | UntitledLockupEntry
     | VideoRendererEntry
+    | UnavailableVideoRendererEntry
     | LiveVideoRendererEntry
     | VideoInfoInPlaylist
     | LivestreamVideoInfoInPlaylist
@@ -271,5 +351,6 @@ type PlaylistEntry = (
     | TruncatedPlaylistInfo
     | VerifiedPlaylistInfo
     | TruncatedVerifiedPlaylistInfo
+    | BarePlaylistInfo
     | TruncatedBarePlaylistInfo
 )

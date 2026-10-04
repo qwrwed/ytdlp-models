@@ -3,6 +3,7 @@ from __future__ import annotations
 from pydantic import TypeAdapter
 
 from yt_dlp_types.playlist_info import (
+    BarePlaylistInfo,
     PlaylistInfo,
     TruncatedBarePlaylistInfo,
     TruncatedPlaylistInfo,
@@ -38,6 +39,7 @@ type ExtractResultType = (
     | TruncatedPlaylistInfo
     | VerifiedPlaylistInfo
     | TruncatedVerifiedPlaylistInfo
+    | BarePlaylistInfo
     | TruncatedBarePlaylistInfo
     | UrlReference
     | TitledUrlReference
