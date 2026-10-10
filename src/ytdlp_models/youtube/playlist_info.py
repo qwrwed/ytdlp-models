@@ -6,7 +6,7 @@ from typing import Literal
 
 from pydantic import BaseModel, ConfigDict, Field
 
-from yt_dlp_youtube_models.video_info import (
+from ytdlp_models.youtube.video_info import (
     CollabVideoInfoInPlaylist,
     LiveNowVideoInfoInPlaylist,
     LivestreamVideoInfoInPlaylist,

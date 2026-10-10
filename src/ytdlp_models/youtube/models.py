@@ -2,7 +2,7 @@ from __future__ import annotations
 
 from pydantic import TypeAdapter
 
-from yt_dlp_youtube_models.playlist_info import (
+from ytdlp_models.youtube.playlist_info import (
     BarePlaylistInfo,
     PlaylistInfo,
     TruncatedBarePlaylistInfo,
@@ -10,8 +10,8 @@ from yt_dlp_youtube_models.playlist_info import (
     TruncatedVerifiedPlaylistInfo,
     VerifiedPlaylistInfo,
 )
-from yt_dlp_youtube_models.url_reference import TitledUrlReference, UrlReference, UrlReferenceWithoutId
-from yt_dlp_youtube_models.video_info import (
+from ytdlp_models.youtube.url_reference import TitledUrlReference, UrlReference, UrlReferenceWithoutId
+from ytdlp_models.youtube.video_info import (
     CollabVideoInfo,
     LiveNowVideoInfo,
     LivestreamVideoInfo,

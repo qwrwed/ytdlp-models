@@ -4,7 +4,7 @@ import json
 from pathlib import Path
 
 import yt_dlp
-from yt_dlp_youtube_models.models import ExtractResult
+from ytdlp_models.youtube import ExtractResult
 
 URLS = [
     "https://www.youtube.com/watch?v=YE7VzlLtp-4",
