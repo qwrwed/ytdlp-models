@@ -149,6 +149,11 @@ class ManifestVideoWithFormatNoteFormat(ManifestVideoFormat):
     format_note: str
 
 
+# yt-dlp test-downloads a __needs_testing format during format selection, then swaps that flag for __working
+class TestedManifestVideoWithFormatNoteFormat(ManifestVideoWithFormatNoteFormat):
+    working__: Literal[True] = Field(..., alias='__working')
+
+
 class StoryboardFormat(BaseModel):
     model_config = ConfigDict(extra='forbid')
 
@@ -373,6 +378,7 @@ class _OnDemand(BaseModel):
         | ManifestMuxedFormat
         | ManifestVideoWithoutFpsFormat
         | ManifestVideoWithFormatNoteFormat
+        | TestedManifestVideoWithFormatNoteFormat
         | StoryboardFormat
         | ManifestAudioFormat
         | NeedsTestingManifestAudioFormat
@@ -380,7 +386,12 @@ class _OnDemand(BaseModel):
         | ManifestAudioWithLanguagePreferenceFormat
         | NeedsTestingManifestAudioWithLanguagePreferenceFormat
     ]
-    requested_formats: list[ProgressiveFormat | StretchedProgressiveFormat | ManifestVideoWithFormatNoteFormat]
+    requested_formats: list[
+        ProgressiveFormat
+        | StretchedProgressiveFormat
+        | ManifestVideoWithFormatNoteFormat
+        | TestedManifestVideoWithFormatNoteFormat
+    ]
     duration: int
     duration_string: str
     filesize_approx: int

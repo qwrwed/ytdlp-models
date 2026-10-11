@@ -2,9 +2,9 @@
 
 from __future__ import annotations
 
-from typing import Literal
+from typing import Annotated, Any, Literal
 
-from pydantic import BaseModel, ConfigDict, Field
+from pydantic import BaseModel, ConfigDict, Discriminator, Field, Tag
 
 from ytdlp_models.youtube.video_info import (
     CollabVideoInfoInPlaylist,
@@ -321,36 +321,66 @@ class TruncatedTabPlaylistEntry(_Nested, _VerifiedOwnerMetadata, _Truncated, _Pl
     playlist_count: None
 
 
+# picks a union member by key presence, so nested playlists are validated against one class
+# instead of every member (smart-mode unions try all of them, which multiplies with nesting)
+def result_tag(value: Any) -> str:
+    if isinstance(value, BaseModel):
+        value = value.model_dump(by_alias=True)
+    if not isinstance(value, dict):
+        return 'video'
+    match value.get('_type'):
+        case 'url':
+            return 'url'
+        case 'playlist':
+            truncated = 'Truncated' if 'requested_entries' in value else ''
+            if '__x_forwarded_for_ip' in value:
+                return f'{truncated}TabPlaylistEntry'
+            if 'channel_is_verified' in value:
+                return f'{truncated}VerifiedPlaylistInfo'
+            if 'channel' in value:
+                return f'{truncated}PlaylistInfo'
+            return f'{truncated}BarePlaylistInfo'
+        case _:
+            return 'video'
+
+
 # url stubs with extract_flat on, full video infos with it off
-type PlaylistEntry = (
-    LinkEntry
-    | MinimalVideoEntry
-    | MinimalPlaylistEntry
-    | ShortsEntry
-    | UntitledShortsEntry
-    | ShortsEntryWithoutViewCount
-    | LockupEntry
-    | LockupEntryWithoutHandle
-    | LockupEntryWithCollaborators
-    | LockupEntryWithoutOwner
-    | LockupEntryWithOwnerName
-    | UntitledLockupEntry
-    | VideoRendererEntry
-    | UnavailableVideoRendererEntry
-    | LiveVideoRendererEntry
-    | VideoInfoInPlaylist
-    | LivestreamVideoInfoInPlaylist
-    | LiveNowVideoInfoInPlaylist
-    | PremiereVideoInfoInPlaylist
-    | CollabVideoInfoInPlaylist
-    | LocationVideoInfoInPlaylist
-    | MusicVideoInfoInPlaylist
-    | TabPlaylistEntry
-    | TruncatedTabPlaylistEntry
-    | PlaylistInfo
-    | TruncatedPlaylistInfo
-    | VerifiedPlaylistInfo
-    | TruncatedVerifiedPlaylistInfo
-    | BarePlaylistInfo
-    | TruncatedBarePlaylistInfo
-)
+type PlaylistEntry = Annotated[
+    Annotated[
+        LinkEntry
+        | MinimalVideoEntry
+        | MinimalPlaylistEntry
+        | ShortsEntry
+        | UntitledShortsEntry
+        | ShortsEntryWithoutViewCount
+        | LockupEntry
+        | LockupEntryWithoutHandle
+        | LockupEntryWithCollaborators
+        | LockupEntryWithoutOwner
+        | LockupEntryWithOwnerName
+        | UntitledLockupEntry
+        | VideoRendererEntry
+        | UnavailableVideoRendererEntry
+        | LiveVideoRendererEntry,
+        Tag('url'),
+    ]
+    | Annotated[
+        VideoInfoInPlaylist
+        | LivestreamVideoInfoInPlaylist
+        | LiveNowVideoInfoInPlaylist
+        | PremiereVideoInfoInPlaylist
+        | CollabVideoInfoInPlaylist
+        | LocationVideoInfoInPlaylist
+        | MusicVideoInfoInPlaylist,
+        Tag('video'),
+    ]
+    | Annotated[TabPlaylistEntry, Tag('TabPlaylistEntry')]
+    | Annotated[TruncatedTabPlaylistEntry, Tag('TruncatedTabPlaylistEntry')]
+    | Annotated[PlaylistInfo, Tag('PlaylistInfo')]
+    | Annotated[TruncatedPlaylistInfo, Tag('TruncatedPlaylistInfo')]
+    | Annotated[VerifiedPlaylistInfo, Tag('VerifiedPlaylistInfo')]
+    | Annotated[TruncatedVerifiedPlaylistInfo, Tag('TruncatedVerifiedPlaylistInfo')]
+    | Annotated[BarePlaylistInfo, Tag('BarePlaylistInfo')]
+    | Annotated[TruncatedBarePlaylistInfo, Tag('TruncatedBarePlaylistInfo')],
+    Discriminator(result_tag),
+]

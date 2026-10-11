@@ -1,6 +1,8 @@
 from __future__ import annotations
 
-from pydantic import TypeAdapter
+from typing import Annotated
+
+from pydantic import Discriminator, Tag, TypeAdapter
 
 from ytdlp_models.youtube.playlist_info import (
     BarePlaylistInfo,
@@ -9,6 +11,7 @@ from ytdlp_models.youtube.playlist_info import (
     TruncatedPlaylistInfo,
     TruncatedVerifiedPlaylistInfo,
     VerifiedPlaylistInfo,
+    result_tag,
 )
 from ytdlp_models.youtube.url_reference import TitledUrlReference, UrlReference, UrlReferenceWithoutId
 from ytdlp_models.youtube.video_info import (
@@ -24,26 +27,28 @@ from ytdlp_models.youtube.video_info import (
     VideoInfo,
 )
 
-type ExtractResultType = (
-    VideoInfo
-    | LivestreamVideoInfo
-    | LiveNowVideoInfo
-    | PremiereVideoInfo
-    | PremiereCollabVideoInfo
-    | CollabVideoInfo
-    | LocationVideoInfo
-    | StretchedVideoInfo
-    | NoHandleVideoInfo
-    | MusicVideoInfo
-    | PlaylistInfo
-    | TruncatedPlaylistInfo
-    | VerifiedPlaylistInfo
-    | TruncatedVerifiedPlaylistInfo
-    | BarePlaylistInfo
-    | TruncatedBarePlaylistInfo
-    | UrlReference
-    | TitledUrlReference
-    | UrlReferenceWithoutId
-)
+type ExtractResultType = Annotated[
+    Annotated[
+        VideoInfo
+        | LivestreamVideoInfo
+        | LiveNowVideoInfo
+        | PremiereVideoInfo
+        | PremiereCollabVideoInfo
+        | CollabVideoInfo
+        | LocationVideoInfo
+        | StretchedVideoInfo
+        | NoHandleVideoInfo
+        | MusicVideoInfo,
+        Tag('video'),
+    ]
+    | Annotated[PlaylistInfo, Tag('PlaylistInfo')]
+    | Annotated[TruncatedPlaylistInfo, Tag('TruncatedPlaylistInfo')]
+    | Annotated[VerifiedPlaylistInfo, Tag('VerifiedPlaylistInfo')]
+    | Annotated[TruncatedVerifiedPlaylistInfo, Tag('TruncatedVerifiedPlaylistInfo')]
+    | Annotated[BarePlaylistInfo, Tag('BarePlaylistInfo')]
+    | Annotated[TruncatedBarePlaylistInfo, Tag('TruncatedBarePlaylistInfo')]
+    | Annotated[UrlReference | TitledUrlReference | UrlReferenceWithoutId, Tag('url')],
+    Discriminator(result_tag),
+]
 
 ExtractResult: TypeAdapter[ExtractResultType] = TypeAdapter(ExtractResultType)
